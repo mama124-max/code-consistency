@@ -21,9 +21,32 @@ app.post('/notes', (req, res) => {
     title: req.body.title,
     content: req.body.content
   };
-  
+
   notes.push(newNote);
   res.status(201).json(newNote);
+});
+
+// 3. PUT /notes/:id - Update a note (UPDATE)
+app.put('/notes/:id', (req, res) => {
+  const noteId = parseInt(req.params.id);
+  const note = notes.find(n => n.id === noteId);
+
+  if (!note) {
+    return res.status(404).json({ message: 'Note not found' });
+  }
+
+  note.title = req.body.title || note.title;
+  note.content = req.body.content || note.content;
+
+  res.status(200).json(note);
+});
+
+// 4. DELETE /notes/:id - Delete a note (DELETE)
+app.delete('/notes/:id', (req, res) => {
+  const noteId = parseInt(req.params.id);
+  notes = notes.filter(n => n.id !== noteId);
+
+  res.status(200).json({ message: 'Note deleted successfully' });
 });
 
 // Start the server
