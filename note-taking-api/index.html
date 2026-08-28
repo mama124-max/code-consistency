@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Note Taking App</title>
+</head>
+
+<body>
+    <h1>My Notes</h1>
+
+    <div>
+        <input type="text" id="titleInput" placeholder="Note Title">
+        <input type="text" id="contentInput" placeholder="Note Content">
+        <button onclick="addNote()">Add Note</button>
+    </div>
+
+    <ul id="notesList"></ul>
+
+    <script>
+        const API_URL = 'http://localhost:3000/notes';
+
+        async function fetchNotes() {
+            try {
+                const response = await fetch(API_URL);
+                const notes = await response.json();
+
+                const list = document.getElementById('notesList');
+                list.innerHTML = '';
+
+                notes.forEach(note => {
+                    const li = document.createElement('li');
+                    li.textContent = note.title + ': ' + note.content;
+                    list.appendChild(li);
+                });
+            } catch (error) {
+                console.log('Error fetching notes:', error);
+            }
+        }
+
+        async function addNote() {
+            const title = document.getElementById('titleInput').value;
+            const content = document.getElementById('contentInput').value;
+
+            if (!title || !content) return;
+
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, content })
+                });
+
+                document.getElementById('titleInput').value = '';
+                document.getElementById('contentInput').value = '';
+                fetchNotes();
+            } catch (error) {
+                console.log('Error adding note:', error);
+            }
+        }
+
+        fetchNotes();
+    </script>
+</body>
+
+</html>

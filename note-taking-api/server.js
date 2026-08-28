@@ -1,7 +1,9 @@
 const express = require('express');
+const cors = require('cors'); // 1. Require cors
+
 const app = express();
 
-// Middleware to parse JSON in incoming requests
+app.use(cors()); // 2. Enable cors BEFORE your routes!
 app.use(express.json());
 
 // In-memory array to store our notes
