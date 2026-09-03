@@ -1,58 +1,77 @@
 const express = require('express');
-const cors = require('cors'); // 1. Require cors
+const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
+const PORT = 3000;
 
-app.use(cors()); // 2. Enable cors BEFORE your routes!
+app.use(cors());
 app.use(express.json());
 
-// In-memory array to store our notes
-let notes = [
-  { id: 1, title: 'First Note', content: 'Learning Express step by step!' }
-];
+const filePath = path.join(__dirname, 'notes.json');
 
-// 1. GET /notes - Retrieve all notes (READ)
+// Helper function to read notes from file
+function readNotes() {
+  if (!fs.existsSync(filePath)) {
+    return [];
+  }
+  const data = fs.readFileSync(filePath, 'utf8');
+  return JSON.parse(data || '[]');
+}
+
+// Helper function to write notes to file
+function saveNotes(notes) {
+  fs.writeFileSync(filePath, JSON.stringify(notes, null, 2));
+}
+
+// 1. GET /notes - Read all notes
 app.get('/notes', (req, res) => {
-  res.status(200).json(notes);
+  const notes = readNotes();
+  res.json(notes);
 });
 
-// 2. POST /notes - Create a new note (CREATE)
+// 2. POST /notes - Create a new note
 app.post('/notes', (req, res) => {
+  const notes = readNotes();
   const newNote = {
-    id: notes.length + 1,
+    id: Date.now(),
     title: req.body.title,
     content: req.body.content
   };
-
   notes.push(newNote);
+  saveNotes(notes);
   res.status(201).json(newNote);
 });
 
-// 3. PUT /notes/:id - Update a note (UPDATE)
+// 3. PUT /notes/:id - Update a note
 app.put('/notes/:id', (req, res) => {
+  const notes = readNotes();
   const noteId = parseInt(req.params.id);
-  const note = notes.find(n => n.id === noteId);
+  const noteIndex = notes.findIndex(n => n.id === noteId);
 
-  if (!note) {
+  if (noteIndex === -1) {
     return res.status(404).json({ message: 'Note not found' });
   }
 
-  note.title = req.body.title || note.title;
-  note.content = req.body.content || note.content;
+  notes[noteIndex].title = req.body.title || notes[noteIndex].title;
+  notes[noteIndex].content = req.body.content || notes[noteIndex].content;
 
-  res.status(200).json(note);
+  saveNotes(notes);
+  res.status(200).json(notes[noteIndex]);
 });
 
-// 4. DELETE /notes/:id - Delete a note (DELETE)
+// 4. DELETE /notes/:id - Delete a note
 app.delete('/notes/:id', (req, res) => {
+  let notes = readNotes();
   const noteId = parseInt(req.params.id);
   notes = notes.filter(n => n.id !== noteId);
 
+  saveNotes(notes);
   res.status(200).json({ message: 'Note deleted successfully' });
 });
 
 // Start the server
-const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
