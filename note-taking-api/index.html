@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Note Taking App</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
@@ -16,13 +16,15 @@
         <div class="input-group">
             <input type="text" id="titleInput" placeholder="Note Title">
             <input type="text" id="contentInput" placeholder="Note Content">
-            <button onclick="addNote()">Add Note</button>
+            <button id="submitBtn" onclick="handleSubmit()">Add Note</button>
         </div>
 
         <ul id="notesList"></ul>
     </div>
 
     <script>
+        let editingNoteId = null;
+
         async function fetchNotes() {
             const response = await fetch('http://localhost:3000/notes');
             const notes = await response.json();
@@ -38,6 +40,17 @@
                 const textSpan = document.createElement('span');
                 textSpan.textContent = `${note.title}: ${note.content}`;
 
+                const buttonGroup = document.createElement('div');
+                buttonGroup.style.display = 'flex';
+                buttonGroup.style.gap = '6px';
+
+                const editBtn = document.createElement('button');
+                editBtn.textContent = 'Edit';
+                editBtn.style.backgroundColor = '#f39c12';
+                editBtn.style.padding = '6px 12px';
+                editBtn.style.fontSize = '12px';
+                editBtn.onclick = () => startEdit(note);
+
                 const deleteBtn = document.createElement('button');
                 deleteBtn.textContent = 'Delete';
                 deleteBtn.style.backgroundColor = '#e74c3c';
@@ -45,23 +58,51 @@
                 deleteBtn.style.fontSize = '12px';
                 deleteBtn.onclick = () => deleteNote(note.id);
 
+                buttonGroup.appendChild(editBtn);
+                buttonGroup.appendChild(deleteBtn);
+
                 li.appendChild(textSpan);
-                li.appendChild(deleteBtn);
+                li.appendChild(buttonGroup);
                 list.appendChild(li);
             });
         }
 
-        async function addNote() {
+        function startEdit(note) {
+            document.getElementById('titleInput').value = note.title;
+            document.getElementById('contentInput').value = note.content;
+
+            editingNoteId = note.id;
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.textContent = 'Update Note';
+            submitBtn.style.backgroundColor = '#f39c12';
+        }
+
+        async function handleSubmit() {
             const title = document.getElementById('titleInput').value;
             const content = document.getElementById('contentInput').value;
 
             if (!title || !content) return;
 
-            await fetch('http://localhost:3000/notes', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, content })
-            });
+            if (editingNoteId !== null) {
+                // UPDATE existing note (PUT)
+                await fetch(`http://localhost:3000/notes/${editingNoteId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, content })
+                });
+
+                editingNoteId = null;
+                const submitBtn = document.getElementById('submitBtn');
+                submitBtn.textContent = 'Add Note';
+                submitBtn.style.backgroundColor = '';
+            } else {
+                // CREATE new note (POST)
+                await fetch('http://localhost:3000/notes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, content })
+                });
+            }
 
             document.getElementById('titleInput').value = '';
             document.getElementById('contentInput').value = '';
