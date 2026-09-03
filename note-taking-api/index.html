@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Note Taking App</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -24,48 +24,75 @@
 
     <script>
         let editingNoteId = null;
-
         async function fetchNotes() {
-            const response = await fetch('http://localhost:3000/notes');
-            const notes = await response.json();
-            const list = document.getElementById('notesList');
-            list.innerHTML = '';
+            try {
+                const response = await fetch('http://localhost:3000/notes');
+                const notes = await response.json();
 
-            notes.forEach(note => {
-                const li = document.createElement('li');
-                li.style.display = 'flex';
-                li.style.justifyContent = 'space-between';
-                li.style.alignItems = 'center';
+                const notesList = document.getElementById('notesList');
+                notesList.innerHTML = '';
 
-                const textSpan = document.createElement('span');
-                textSpan.textContent = `${note.title}: ${note.content}`;
+                notes.forEach(note => {
+                    const li = document.createElement('li');
 
-                const buttonGroup = document.createElement('div');
-                buttonGroup.style.display = 'flex';
-                buttonGroup.style.gap = '6px';
+                    // Text container for title and content
+                    const textContainer = document.createElement('div');
+                    textContainer.style.display = 'flex';
+                    textContainer.style.flexDirection = 'column';
+                    textContainer.style.gap = '4px';
 
-                const editBtn = document.createElement('button');
-                editBtn.textContent = 'Edit';
-                editBtn.style.backgroundColor = '#f39c12';
-                editBtn.style.padding = '6px 12px';
-                editBtn.style.fontSize = '12px';
-                editBtn.onclick = () => startEdit(note);
+                    const titleElement = document.createElement('h3');
+                    titleElement.textContent = note.title;
+                    titleElement.style.fontSize = '16px';
+                    titleElement.style.fontWeight = '600';
+                    titleElement.style.color = '#f8fafc';
+                    titleElement.style.margin = '0';
 
-                const deleteBtn = document.createElement('button');
-                deleteBtn.textContent = 'Delete';
-                deleteBtn.style.backgroundColor = '#e74c3c';
-                deleteBtn.style.padding = '6px 12px';
-                deleteBtn.style.fontSize = '12px';
-                deleteBtn.onclick = () => deleteNote(note.id);
+                    const contentElement = document.createElement('p');
+                    contentElement.textContent = note.content;
+                    contentElement.style.fontSize = '14px';
+                    contentElement.style.color = '#94a3b8';
+                    contentElement.style.margin = '0';
 
-                buttonGroup.appendChild(editBtn);
-                buttonGroup.appendChild(deleteBtn);
+                    textContainer.appendChild(titleElement);
+                    textContainer.appendChild(contentElement);
 
-                li.appendChild(textSpan);
-                li.appendChild(buttonGroup);
-                list.appendChild(li);
-            });
+                    // Button group for Edit and Delete
+                    const buttonGroup = document.createElement('div');
+                    buttonGroup.style.display = 'flex';
+                    buttonGroup.style.gap = '6px';
+
+                    const editBtn = document.createElement('button');
+                    editBtn.textContent = 'Edit';
+                    editBtn.style.backgroundColor = '#f59e0b';
+                    editBtn.style.color = '#0f172a';
+                    editBtn.style.padding = '8px 14px';
+                    editBtn.style.fontSize = '13px';
+                    editBtn.onclick = () => startEdit(note);
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = 'Delete';
+                    deleteBtn.style.backgroundColor = '#ef4444';
+                    deleteBtn.style.color = '#ffffff';
+                    deleteBtn.style.padding = '8px 14px';
+                    deleteBtn.style.fontSize = '13px';
+                    deleteBtn.onclick = () => deleteNote(note.id);
+
+                    buttonGroup.appendChild(editBtn);
+                    buttonGroup.appendChild(deleteBtn);
+
+                    // Append text and buttons to list item
+                    li.appendChild(textContainer);
+                    li.appendChild(buttonGroup);
+
+                    notesList.appendChild(li);
+                });
+            } catch (error) {
+                console.error('Error fetching notes:', error);
+            }
         }
+
+
 
         function startEdit(note) {
             document.getElementById('titleInput').value = note.title;
