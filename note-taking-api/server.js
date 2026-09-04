@@ -1,3 +1,8 @@
+app.get('/', (req, res) => {
+  res.send('API is running smoothly!');
+});
+
+
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
