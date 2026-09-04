@@ -16,7 +16,7 @@
         <div class="input-group">
             <input type="text" id="noteTitle" placeholder="Note Title">
             <input type="text" id="noteContent" placeholder="Note Content">
-            <button id="addBtn" onclick="addNote()">Add Note</button>
+            <button id="submitBtn" onclick="saveNote(event)">Add Note</button>
         </div>
 
         <!-- Search Bar -->
@@ -169,7 +169,6 @@
         }
 
         // Initialize
-        document.getElementById('noteForm').addEventListener('submit', saveNote);
         fetchNotes();
     </script>
 
