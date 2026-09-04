@@ -4,8 +4,6 @@ const fs = require('fs');
 const path = require('path');
 
 const app = express();
-const PORT = 3000;
-
 app.use(cors());
 app.use(express.json());
 
@@ -72,6 +70,9 @@ app.delete('/notes/:id', (req, res) => {
 });
 
 // Start the server
+// Use the cloud provider's port, or default to 3000 for local testing
+const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
