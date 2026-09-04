@@ -4,26 +4,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Note Taking App</title>
+    <title>My Notes</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-
     <div class="container">
         <h1>My Notes</h1>
 
+        <!-- Input Form -->
         <div class="input-group">
-            <input type="text" id="titleInput" placeholder="Note Title">
-            <input type="text" id="contentInput" placeholder="Note Content">
-            <button id="submitBtn" onclick="handleSubmit()">Add Note</button>
+            <input type="text" id="noteTitle" placeholder="Note Title">
+            <input type="text" id="noteContent" placeholder="Note Content">
+            <button id="addBtn" onclick="addNote()">Add Note</button>
         </div>
 
+        <!-- Search Bar -->
+        <div style="margin-bottom: 20px;">
+            <input type="text" id="searchInput" placeholder="Search notes..." oninput="filterNotes()" style="
+          width: 100%;
+          padding: 12px 16px;
+          background-color: rgba(15, 23, 42, 0.6);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 10px;
+          font-size: 14px;
+          color: #f8fafc;
+          outline: none;
+        " />
+        </div>
+
+        <!-- Notes List -->
         <ul id="notesList"></ul>
     </div>
 
     <script>
-        let editingNoteId = null;
+        let editNoteId = null;
+
+        // 1. Fetch and Display All Notes
         async function fetchNotes() {
             try {
                 const response = await fetch('http://localhost:3000/notes');
@@ -31,6 +48,11 @@
 
                 const notesList = document.getElementById('notesList');
                 notesList.innerHTML = '';
+
+                if (notes.length === 0) {
+                    notesList.innerHTML = `<p style="text-align: center; color: #64748b; font-size: 14px; padding: 20px 0;">No notes available. Add your first note above!</p>`;
+                    return;
+                }
 
                 notes.forEach(note => {
                     const li = document.createElement('li');
@@ -87,56 +109,60 @@
 
                     notesList.appendChild(li);
                 });
+
+                // Maintain filter state if user is actively searching
+                filterNotes();
             } catch (error) {
                 console.error('Error fetching notes:', error);
             }
         }
 
+        // 2. Add or Update a Note
+        async function addNote() {
+            const titleInput = document.getElementById('noteTitle');
+            const contentInput = document.getElementById('noteContent');
 
+            const title = titleInput.value.trim();
+            const content = contentInput.value.trim();
 
-        function startEdit(note) {
-            document.getElementById('titleInput').value = note.title;
-            document.getElementById('contentInput').value = note.content;
+            if (!title || !content) {
+                alert('Please fill in both fields.');
+                return;
+            }
 
-            editingNoteId = note.id;
-            const submitBtn = document.getElementById('submitBtn');
-            submitBtn.textContent = 'Update Note';
-            submitBtn.style.backgroundColor = '#f39c12';
-        }
-
-        async function handleSubmit() {
-            const title = document.getElementById('titleInput').value;
-            const content = document.getElementById('contentInput').value;
-
-            if (!title || !content) return;
-
-            if (editingNoteId !== null) {
-                // UPDATE existing note (PUT)
-                await fetch(`http://localhost:3000/notes/${editingNoteId}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ title, content })
-                });
-
-                editingNoteId = null;
-                const submitBtn = document.getElementById('submitBtn');
-                submitBtn.textContent = 'Add Note';
-                submitBtn.style.backgroundColor = '';
-            } else {
-                // CREATE new note (POST)
+            if (editNoteId === null) {
+                // Create new note
                 await fetch('http://localhost:3000/notes', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ title, content })
                 });
+            } else {
+                // Update existing note
+                await fetch(`http://localhost:3000/notes/${editNoteId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, content })
+                });
+
+                editNoteId = null;
+                document.getElementById('addBtn').textContent = 'Add Note';
             }
 
-            document.getElementById('titleInput').value = '';
-            document.getElementById('contentInput').value = '';
-
+            titleInput.value = '';
+            contentInput.value = '';
             fetchNotes();
         }
 
+        // 3. Start Editing Mode
+        function startEdit(note) {
+            document.getElementById('noteTitle').value = note.title;
+            document.getElementById('noteContent').value = note.content;
+            editNoteId = note.id;
+            document.getElementById('addBtn').textContent = 'Update Note';
+        }
+
+        // 4. Delete a Note
         async function deleteNote(id) {
             await fetch(`http://localhost:3000/notes/${id}`, {
                 method: 'DELETE'
@@ -144,6 +170,40 @@
             fetchNotes();
         }
 
+        // 5. Live Search / Filter with Empty Search State
+        function filterNotes() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const noteItems = document.querySelectorAll('#notesList li');
+            let visibleCount = 0;
+
+            noteItems.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                if (text.includes(query)) {
+                    item.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Remove any existing temporary no-results message
+            const noResultsMsg = document.getElementById('noResults');
+            if (noResultsMsg) noResultsMsg.remove();
+
+            // Show no-results message if search matches nothing
+            if (visibleCount === 0 && noteItems.length > 0) {
+                const msg = document.createElement('p');
+                msg.id = 'noResults';
+                msg.textContent = 'No matching notes found.';
+                msg.style.textAlign = 'center';
+                msg.style.color = '#64748b';
+                msg.style.fontSize = '14px';
+                msg.style.padding = '20px 0';
+                document.getElementById('notesList').appendChild(msg);
+            }
+        }
+
+        // Load notes when page first opens
         fetchNotes();
     </script>
 </body>
