@@ -90,11 +90,11 @@
                     editBtn.className = 'edit-btn';
                     editBtn.onclick = () => prepareEditNote(note);
 
-                    // Delete button
+                    // Delete button (FIXED: note.id -> note._id)
                     const deleteBtn = document.createElement('button');
                     deleteBtn.textContent = 'Delete';
                     deleteBtn.className = 'delete-btn';
-                    deleteBtn.onclick = () => deleteNote(note.id);
+                    deleteBtn.onclick = () => deleteNote(note._id);
 
                     actionsContainer.appendChild(editBtn);
                     actionsContainer.appendChild(deleteBtn);
@@ -153,7 +153,7 @@
             document.getElementById('noteTitle').value = note.title;
             document.getElementById('noteContent').value = note.content;
             document.getElementById('submitBtn').textContent = 'Update Note';
-            editNoteId = note.id;
+            editNoteId = note._id;
         }
 
         // 4. Delete Note
